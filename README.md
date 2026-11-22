@@ -102,7 +102,7 @@ Try `examples/reference-routing-notes.md` first. It is a labeled teaching note, 
 
 Imports are stored locally in `data/imported_documents.json`, excluded from Git and the distributable project ZIP. Limits: 40–150,000 characters per document, 30 documents, and 2 million characters in total. Text is normalized to LF line endings and outer whitespace is trimmed. A SHA-256 hash of that normalized text identifies exact duplicates. Passages contain at most 1,600 characters with overlapping context. Line/character locations refer to the normalized stored text. At most two passages from any one imported document are selected per search.
 
-Imports are untrusted reference data. They are not executed, rendered as HTML, or treated as system instructions by the provider prompt. They can still be wrong or contain misleading instructions; the independent checker remains necessary, and this is not a claim of complete prompt-injection resistance. PDF extraction is not implemented yet.
+Imports are untrusted reference data. They are not executed, rendered as HTML, or treated as system instructions by the provider prompt. They can still be wrong or contain misleading instructions; the independent checker remains necessary, and this is not a claim of complete prompt-injection resistance. PDF evidence export is supported; PDF reference ingestion is not.
 
 Exported evidence intentionally includes the retrieved passages supplied to the model. Review that export before sharing it if your references contain private material. Importing text itself makes no external API request.
 
@@ -118,7 +118,7 @@ Exported evidence intentionally includes the retrieved passages supplied to the 
 
 The checker rejects extra commands, duplicate routes, missing routes, wrong variable substitutions, unknown variables, and hardcoded values that do not generalize to the alternate inputs. The caller's structured intent is validated first: IPv4 only, usable host addresses, a distinct directly connected next hop, and a non-overlapping remote destination.
 
-This limited task excludes /31 and /32 interface links, overlapping/default destination routes, recursive next hops, multi-vendor syntax, and arbitrary network changes. IPv6 and VLANs are supported as separate single-interface/static-route profiles with disposable packet tests. OSPF validation and daemon/adjacency checks are active; route-learning evidence is retained when the bounded Docker topology cannot install the learned prefix. These are scope choices, not claims that FRRouting lacks these features.
+This bounded prototype excludes /31 and /32 interface links, overlapping/default destination routes, recursive next hops, arbitrary network changes, and full vendor feature coverage. IPv4, IPv6, VLAN, OSPF, Cisco IOS, and Juniper Junos profiles are supported with static checks; IPv4, IPv6, VLAN, and OSPF Docker evidence is available for the tested topologies. These are scope choices, not claims that FRRouting or vendor platforms lack these features.
 
 The live model is asked to respect the structured intent. If the natural-language description conflicts with the form, the form is authoritative. Do not describe the prototype as understanding arbitrary network requests.
 
@@ -174,8 +174,8 @@ There are 10 development and 20 evaluation inputs. The split separates exact inp
 ## Next milestones
 
 1. Configure a real model and collect a small development run. Inspect its failures.
-2. Complete the **version-pinned FRRouting virtual-router lab** OSPF learned-route check in a topology that exports a peer prefix through the container namespace. The custom image now includes `ospfd`; OSPF daemon readiness, configuration acceptance, Full adjacency, kernel routes, OSPF routes, and LSAs are captured. Standard IPv4, two-route IPv4, IPv6, and VLAN profiles verify packet or tagged-link delivery.
-3. Expand the reference library with reviewed documentation and add PDF extraction with retained page provenance.
+2. Extend the **version-pinned FRRouting virtual-router lab** with additional OSPF and vendor topologies. The custom image includes `ospfd`; OSPF daemon readiness, configuration acceptance, Full adjacency, learned kernel routes, OSPF routes, and LSAs are captured for the current topology. Standard IPv4, two-route IPv4, IPv6, and VLAN profiles verify packet or tagged-link delivery.
+3. Expand the reference library with reviewed vendor documentation and add PDF reference ingestion with retained page provenance.
 4. Add genuinely different held-out task families, independently reviewed expected behavior, and explicit malformed-template repair tasks.
 5. Measure repair regressions, token cost, latency, and model variance; write a short experiment report and record a demo.
 
