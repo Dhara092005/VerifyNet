@@ -1,0 +1,51 @@
+test_disconnect_does_not_fall_back_to_environment (test_library_and_setup.ConnectionTests.test_disconnect_does_not_fall_back_to_environment) ... ok
+test_failed_reconnect_preserves_previous_connection (test_library_and_setup.ConnectionTests.test_failed_reconnect_preserves_previous_connection) ... ok
+test_invalid_fields_never_make_a_request (test_library_and_setup.ConnectionTests.test_invalid_fields_never_make_a_request) ... ok
+test_model_mismatch_does_not_save_key (test_library_and_setup.ConnectionTests.test_model_mismatch_does_not_save_key) ... ok
+test_success_keeps_secret_out_of_status (test_library_and_setup.ConnectionTests.test_success_keeps_secret_out_of_status) ... ok
+test_cross_origin_cannot_set_credentials (test_library_and_setup.LibraryHTTPTests.test_cross_origin_cannot_set_credentials) ... ok
+test_import_larger_than_old_request_limit (test_library_and_setup.LibraryHTTPTests.test_import_larger_than_old_request_limit) ... ok
+test_import_search_toggle_and_list_over_http (test_library_and_setup.LibraryHTTPTests.test_import_search_toggle_and_list_over_http) ... ok
+test_second_server_cannot_share_the_same_port (test_library_and_setup.LibraryHTTPTests.test_second_server_cannot_share_the_same_port) ... ok
+test_setup_endpoint_never_echoes_key (test_library_and_setup.LibraryHTTPTests.test_setup_endpoint_never_echoes_key) ... ok
+test_bad_library_is_not_silently_overwritten (test_library_and_setup.LibraryTests.test_bad_library_is_not_silently_overwritten) ... ok
+test_chunks_are_bounded_exact_slices_with_coverage (test_library_and_setup.LibraryTests.test_chunks_are_bounded_exact_slices_with_coverage) ... ok
+test_disable_preserves_file_and_changes_snapshot (test_library_and_setup.LibraryTests.test_disable_preserves_file_and_changes_snapshot) ... ok
+test_duplicate_content_is_not_added_or_reenabled (test_library_and_setup.LibraryTests.test_duplicate_content_is_not_added_or_reenabled) ... ok
+test_import_search_and_source_location (test_library_and_setup.LibraryTests.test_import_search_and_source_location) ... ok
+test_one_document_does_not_take_every_retrieval_slot (test_library_and_setup.LibraryTests.test_one_document_does_not_take_every_retrieval_slot) ... ok
+test_pipeline_records_corpus_snapshot_and_baseline_has_none (test_library_and_setup.LibraryTests.test_pipeline_records_corpus_snapshot_and_baseline_has_none) ... ok
+test_same_library_has_stable_fingerprint (test_library_and_setup.LibraryTests.test_same_library_has_stable_fingerprint) ... ok
+test_unsafe_links_binary_and_oversized_text_rejected (test_library_and_setup.LibraryTests.test_unsafe_links_binary_and_oversized_text_rejected) ... ok
+test_broken_gateway_fails_command_structure (test_verifynet.CheckerTests.test_broken_gateway_fails_command_structure) ... ok
+test_empty_large_and_nontext_templates_fail_cleanly (test_verifynet.CheckerTests.test_empty_large_and_nontext_templates_fail_cleanly) ... ok
+test_fixture_regression_expected_verdicts (test_verifynet.CheckerTests.test_fixture_regression_expected_verdicts) ... ok
+test_hardcoded_first_example_does_not_pass (test_verifynet.CheckerTests.test_hardcoded_first_example_does_not_pass) ... ok
+test_invalid_contracts_are_rejected (test_verifynet.CheckerTests.test_invalid_contracts_are_rejected) ... ok
+test_missing_extra_and_duplicate_commands_fail (test_verifynet.CheckerTests.test_missing_extra_and_duplicate_commands_fail) ... ok
+test_parameter_variation (test_verifynet.CheckerTests.test_parameter_variation) ... ok
+test_reference_passes_three_distinct_inputs (test_verifynet.CheckerTests.test_reference_passes_three_distinct_inputs) ... ok
+test_unknown_variables_and_expressions_fail (test_verifynet.CheckerTests.test_unknown_variables_and_expressions_fail) ... ok
+test_valid_syntax_wrong_gateway_fails_intent (test_verifynet.CheckerTests.test_valid_syntax_wrong_gateway_fails_intent) ... ok
+test_bad_origin_bad_host_and_bad_intent (test_verifynet.HTTPTests.test_bad_origin_bad_host_and_bad_intent) ... ok
+test_full_demo_over_http (test_verifynet.HTTPTests.test_full_demo_over_http) ... ok
+test_static_files_and_not_found (test_verifynet.HTTPTests.test_static_files_and_not_found) ... ok
+test_status_does_not_expose_secrets (test_verifynet.HTTPTests.test_status_does_not_expose_secrets) ... ok
+test_validate_and_benchmark_endpoints (test_verifynet.HTTPTests.test_validate_and_benchmark_endpoints) ... ok
+test_demo_is_labeled_and_repairs_real_checker_failure (test_verifynet.PipelineTests.test_demo_is_labeled_and_repairs_real_checker_failure) ... ok
+test_development_and_evaluation_ids_disjoint (test_verifynet.PipelineTests.test_development_and_evaluation_ids_disjoint) ... ok
+test_exhausted_repair_budget_preserves_failure (test_verifynet.PipelineTests.test_exhausted_repair_budget_preserves_failure) ... ok
+test_invalid_payloads (test_verifynet.PipelineTests.test_invalid_payloads) ... ok
+test_passing_user_candidate_stops_without_model_call (test_verifynet.PipelineTests.test_passing_user_candidate_stops_without_model_call) ... ok
+test_provider_error_during_repair_keeps_evidence (test_verifynet.PipelineTests.test_provider_error_during_repair_keeps_evidence) ... ok
+test_retrieval_returns_source_provenance (test_verifynet.PipelineTests.test_retrieval_returns_source_provenance) ... ok
+test_strategies_actually_change_documents_and_retries (test_verifynet.PipelineTests.test_strategies_actually_change_documents_and_retries) ... ok
+test_zero_budget_stops_on_failure (test_verifynet.PipelineTests.test_zero_budget_stops_on_failure) ... ok
+test_missing_configuration_fails_instead_of_using_demo (test_verifynet.ProviderTests.test_missing_configuration_fails_instead_of_using_demo) ... ok
+test_refusal_incomplete_and_malformed_responses (test_verifynet.ProviderTests.test_refusal_incomplete_and_malformed_responses) ... ok
+test_responses_contract_and_citation_filter (test_verifynet.ProviderTests.test_responses_contract_and_citation_filter) ... ok
+
+----------------------------------------------------------------------
+Ran 46 tests in 3.689s
+
+OK

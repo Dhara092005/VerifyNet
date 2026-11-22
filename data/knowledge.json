@@ -1,0 +1,26 @@
+[
+  {
+    "id": "frr-interface",
+    "title": "Interface addressing",
+    "url": "https://docs.frrouting.org/en/latest/zebra.html",
+    "text": "FRRouting interface configuration uses an interface NAME context. Inside that context, ip address ADDRESS/PREFIX assigns an IPv4 address. This prototype closes the context with exit before adding global static routes. Use an interface host address and retain the prefix length.",
+    "kind": "Locally authored documentation summary",
+    "reviewed": "2026-10-29"
+  },
+  {
+    "id": "frr-static",
+    "title": "Static route destination and gateway",
+    "url": "https://docs.frrouting.org/en/latest/static.html",
+    "text": "A basic FRRouting IPv4 static route has the form ip route NETWORK GATEWAY. NETWORK is a destination prefix. GATEWAY is a next-hop address. For this project's IPv4-only subset, give the gateway as an IPv4 address without a CIDR suffix. Additional FRRouting route forms exist but are outside this prototype.",
+    "kind": "Locally authored documentation summary",
+    "reviewed": "2026-10-29"
+  },
+  {
+    "id": "project-contract",
+    "title": "VerifyNet template contract",
+    "url": "README.md",
+    "text": "VerifyNet supports explicit profiles for IPv4, multi-route IPv4, IPv6, VLAN 802.1Q, OSPF, Cisco IOS, and Juniper Junos. Each profile has a bounded variable contract and vendor or protocol-specific command checks. Templates must use placeholders rather than hardcoded examples; the checker renders alternate parameter sets, requires agreement with the explicit intent, rejects unsafe or extra commands, and records virtual-router evidence when Docker tests are available. A local pass is evidence for the tested contract, not a production-device guarantee.",
+    "kind": "Project specification",
+    "reviewed": "2026-10-29"
+  }
+]

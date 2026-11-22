@@ -1,0 +1,4 @@
+interface {{ interface }}
+ ip address {{ interface_cidr }}
+exit
+ip route {{ destination_cidr }} {{ next_hop }}

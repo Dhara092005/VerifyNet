@@ -1,0 +1,13 @@
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.env
+data/human_feedback.json
+data/run_history.json
+data/run_history.sqlite3
+reports/*.json
+reports/*.pdf
+reports/*.sqlite3
+*.log
+.DS_Store
