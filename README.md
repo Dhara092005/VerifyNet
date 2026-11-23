@@ -47,6 +47,10 @@ python -m venv .venv
 
 If port 8765 is occupied, use `python app.py --port 8766 --open`. Stop the server with Ctrl+C in its terminal.
 
+## Deploy on Render
+
+The repository includes `render.yaml` for a Render web service. In Render, choose **New → Blueprint**, select the `main` branch of `Dhara092005/VerifyNet`, review the generated `verifynet` service, and deploy it. `OPENAI_API_KEY` and `VERIFYNET_MODEL` are optional environment variables: leave them empty for the scripted demo, or add them later after the OpenAI project has usable API quota. The hosted app serves the dashboard and reports; Docker/FRRouting virtual-router tests require a Docker-capable local or private host.
+
 ## Try the first experiment
 
 1. Leave **Scripted demo** and **Retrieval + repair** selected.
