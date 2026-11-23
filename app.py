@@ -56,11 +56,12 @@ class Handler(BaseHTTPRequestHandler):
     def local_request(self):
         port = self.server.server_port
         allowed = {f"127.0.0.1:{port}", f"localhost:{port}"}
-        if self.headers.get("Host") not in allowed:
+        remote_mode = os.environ.get("VERIFYNET_ALLOW_REMOTE", "0").lower() in {"1", "true", "yes"}
+        if not remote_mode and self.headers.get("Host") not in allowed:
             self.send(403, {"error": "This workbench accepts local requests only."})
             return False
         origin = self.headers.get("Origin")
-        if origin and origin not in {f"http://{host}" for host in allowed}:
+        if not remote_mode and origin and origin not in {f"http://{host}" for host in allowed}:
             self.send(403, {"error": "Cross-origin requests are not allowed."})
             return False
         return True
