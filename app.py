@@ -2,6 +2,7 @@
 import argparse
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import json
+import os
 from pathlib import Path
 import socket
 import threading
@@ -199,11 +200,12 @@ class Handler(BaseHTTPRequestHandler):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--port", type=int, default=8765)
+    parser.add_argument("--host", default=os.environ.get("VERIFYNET_HOST", "127.0.0.1"))
+    parser.add_argument("--port", type=int, default=int(os.environ.get("PORT", "8765")))
     parser.add_argument("--open", action="store_true", help="Open the workbench in your browser.")
     args = parser.parse_args()
     try:
-        server = LocalServer(("127.0.0.1", args.port), Handler)
+        server = LocalServer((args.host, args.port), Handler)
     except OSError:
         parser.exit(1, f"Could not start on port {args.port}. Close the existing server or choose another --port.\n")
     print(f"VerifyNet is ready at http://127.0.0.1:{args.port}", flush=True)
