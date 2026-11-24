@@ -4,6 +4,7 @@ __pycache__/
 venv/
 .env
 data/human_feedback.json
+data/audit.jsonl
 data/run_history.json
 data/run_history.sqlite3
 reports/*.json
