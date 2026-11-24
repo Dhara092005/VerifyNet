@@ -133,7 +133,7 @@ function showReport(data) {
 function navigate(viewName) {
   document.querySelectorAll('.view').forEach(view => view.hidden = view.id !== 'view-' + viewName);
   document.querySelectorAll('[data-view]').forEach(b => b.classList.toggle('active', b.dataset.view === viewName));
-  $('breadcrumb').textContent = {lab:'Template lab', benchmark:'Evaluation', method:'How it works', library:'Reference library', setup:'AI setup', router:'Router lab', history:'Run history'}[viewName];
+  $('breadcrumb').textContent = {lab:'Template lab', benchmark:'Evaluation', method:'How it works', library:'Reference library', setup:'AI setup', router:'Router lab', topology:'Network topology', history:'Run history'}[viewName];
   if (viewName === 'library') refreshLibrary().catch(error => notify(error.message, true));
   if (viewName === 'history') refreshHistory().catch(error => notify(error.message, true));
   window.scrollTo({top:0, behavior:'smooth'});
