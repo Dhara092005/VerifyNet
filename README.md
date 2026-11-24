@@ -132,6 +132,18 @@ The repository includes `render.yaml`.
 
 The Render service uses `python app.py --host 0.0.0.0 --port $PORT` and checks `/api/status` for health. The `VERIFYNET_ALLOW_REMOTE` setting is enabled only by the Render blueprint; local runs remain localhost-only by default.
 
+## Docker-capable live deployment
+
+For a live Router Lab, use an Ubuntu VM or another Docker-capable Linux host. Copy the repository to the host, create an environment file, and start the service:
+
+```bash
+cp .env.example .env
+# edit .env and replace VERIFYNET_ACCESS_TOKEN with a long random value
+docker compose up -d --build
+```
+
+The service is then available on port `8765`. Compose mounts the Docker socket because the Router Lab starts short-lived FRRouting containers. Protect the VM with a firewall or reverse proxy and keep `VERIFYNET_ACCESS_TOKEN` enabled. Do not expose the Docker socket itself or enable remote live AI until stronger identity management is configured.
+
 ## Project structure
 
 ```text
