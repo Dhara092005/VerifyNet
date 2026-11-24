@@ -145,10 +145,12 @@ $('topology-refresh').addEventListener('click', async () => {
   button.disabled = true;
   button.textContent = 'Checking…';
   try {
-    const status = await api('/api/status');
+    const [status, router] = await Promise.all([api('/api/status'), fetch('/api/router/status').then(response => response.json())]);
     const healthy = Boolean(status && status.connection);
     $('topology-health-score').textContent = healthy ? '87%' : '0%';
     checked.textContent = `Last checked ${new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})} · ${healthy ? 'workspace connected' : 'workspace unavailable'}`;
+    const labStatus = $('topology-lab-status');
+    labStatus.innerHTML = `<span class="legend-dot ${router.ready ? 'online' : 'warning'}"></span> Router Lab: ${escapeHtml(router.ready ? 'ready for virtual-router tests' : (router.message || 'unavailable'))}`;
     notify(healthy ? 'Topology status refreshed.' : 'The workspace is unavailable.', !healthy);
   } catch (error) {
     $('topology-health-score').textContent = '0%';
@@ -159,6 +161,7 @@ $('topology-refresh').addEventListener('click', async () => {
     button.textContent = 'Refresh status';
   }
 });
+$('topology-open-router').addEventListener('click', () => navigate('router'));
 $('mode').addEventListener('change', modeChanged);
 $('strategy').addEventListener('change', () => $('max_repairs').disabled = $('strategy').value !== 'rag_repair');
 document.querySelectorAll('[data-code]').forEach(b => b.addEventListener('click', () => {codeTab = b.dataset.code; showCode();}));
