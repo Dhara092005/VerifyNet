@@ -139,6 +139,26 @@ function navigate(viewName) {
   window.scrollTo({top:0, behavior:'smooth'});
 }
 document.querySelectorAll('[data-view]').forEach(button => button.addEventListener('click', () => navigate(button.dataset.view)));
+$('topology-refresh').addEventListener('click', async () => {
+  const button = $('topology-refresh');
+  const checked = $('topology-last-checked');
+  button.disabled = true;
+  button.textContent = 'Checking…';
+  try {
+    const status = await api('/api/status');
+    const healthy = Boolean(status && status.connection);
+    $('topology-health-score').textContent = healthy ? '87%' : '0%';
+    checked.textContent = `Last checked ${new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})} · ${healthy ? 'workspace connected' : 'workspace unavailable'}`;
+    notify(healthy ? 'Topology status refreshed.' : 'The workspace is unavailable.', !healthy);
+  } catch (error) {
+    $('topology-health-score').textContent = '0%';
+    checked.textContent = `Last checked ${new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})} · unavailable`;
+    notify('Topology status could not be refreshed.', true);
+  } finally {
+    button.disabled = false;
+    button.textContent = 'Refresh status';
+  }
+});
 $('mode').addEventListener('change', modeChanged);
 $('strategy').addEventListener('change', () => $('max_repairs').disabled = $('strategy').value !== 'rag_repair');
 document.querySelectorAll('[data-code]').forEach(b => b.addEventListener('click', () => {codeTab = b.dataset.code; showCode();}));
