@@ -18,7 +18,7 @@ from verifynet.retrieval import DATA, retrieve, retrieve_with_snapshot
 from verifynet.documents import import_document, library, set_enabled
 from verifynet.settings import connect, connection_status, disconnect
 from verifynet.router_lab import readiness, run_lab
-from verifynet.history import list_runs, record
+from verifynet.history import list_runs, list_versions, record, restore_version
 from verifynet.feedback import add_feedback, feedback_summary
 from verifynet.reports import html_report
 from verifynet.pdf_report import pdf_report
@@ -90,6 +90,9 @@ class Handler(BaseHTTPRequestHandler):
         if path == "/api/history":
             self.send(200, {"runs": list_runs()})
             return
+        if path == "/api/versions":
+            self.send(200, {"versions": list_versions()})
+            return
         if path == "/api/feedback":
             self.send(200, {"summary": feedback_summary()})
             return
@@ -124,7 +127,7 @@ class Handler(BaseHTTPRequestHandler):
         if self.headers.get("X-VerifyNet") != "1" or self.headers.get("Content-Type", "").split(";")[0] != "application/json":
             self.send(415, {"error": "Use the local workbench to submit JSON requests."})
             return
-        if path not in ("/api/run", "/api/validate", "/api/benchmark", "/api/live-benchmark", "/api/feedback", "/api/documents/import", "/api/documents/state", "/api/retrieve", "/api/connection", "/api/disconnect", "/api/router/run", "/api/report/html", "/api/report/pdf"):
+        if path not in ("/api/run", "/api/validate", "/api/benchmark", "/api/live-benchmark", "/api/feedback", "/api/documents/import", "/api/documents/state", "/api/retrieve", "/api/connection", "/api/disconnect", "/api/router/run", "/api/versions/restore", "/api/report/html", "/api/report/pdf"):
             self.send(404, {"error": "Not found."})
             return
         try:
@@ -174,6 +177,8 @@ class Handler(BaseHTTPRequestHandler):
             elif path == "/api/router/run":
                 result = run_lab(payload)
                 result["history_id"] = record(result, "router")["id"]
+            elif path == "/api/versions/restore":
+                result = restore_version(payload.get("version_id"))
             elif path == "/api/feedback":
                 result = add_feedback(payload)
             elif path == "/api/report/html":

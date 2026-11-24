@@ -280,7 +280,7 @@ $('run-result-router').addEventListener('click', async () => {
 $('export-router').addEventListener('click', () => { if (routerReport) download('verifynet-router-evidence.json', routerReport); });
 function formatDate(value) { try { return new Intl.DateTimeFormat(undefined, {dateStyle:'medium', timeStyle:'short'}).format(new Date(value)); } catch { return 'Unknown date'; } }
 function refreshHistory() {
-  return Promise.all([fetch('/api/history').then(response => response.json()), fetch('/api/feedback').then(response => response.json())]).then(([{runs}, feedback]) => {
+  return Promise.all([fetch('/api/history').then(response => response.json()), fetch('/api/feedback').then(response => response.json()), fetch('/api/versions').then(response => response.json())]).then(([{runs}, feedback, {versions}]) => {
     const generation = runs.filter(r => r.kind === 'generation');
     const passed = generation.filter(r => r.final_pass).length;
     const repairs = generation.reduce((sum, r) => sum + (r.repairs || 0), 0);
@@ -300,6 +300,13 @@ function refreshHistory() {
     $('research-chart').innerHTML = measured ? [['Latency', measured.latency.toFixed(2) + 's'], ['Repairs', measured.repairs.toFixed(2) + ' avg'], ['First-pass accuracy', Math.round(measured.first) + '%'], ['Final accuracy', Math.round(measured.final) + '%'], ['References', measured.references.toFixed(2) + ' avg']].map(([label,value]) => `<div class="bar-row"><span>${label}</span><b>${value}</b></div>`).join('') : '<p class="history-empty">Run experiments to measure latency, repairs, accuracy, and references.</p>';
     $('case-detail-select').innerHTML = '<option value="">Choose a run</option>' + runs.map(run => `<option value="${escapeHtml(run.id)}">${escapeHtml(formatDate(run.created_at))} · ${escapeHtml(run.task_profile || run.kind || 'run')} · ${escapeHtml(run.strategy || 'router')}</option>`).join('');
     $('case-detail-select').onchange = event => { const selected = runs.find(run => run.id === event.target.value); $('case-detail').textContent = selected ? JSON.stringify(selected, null, 2) : 'Select a run to inspect its intent, strategy, timing, references, and outcome.'; };
+    $('version-list').innerHTML = versions.length ? versions.map(version => `<div class="version-row"><div><strong>${escapeHtml(version.task_profile)}</strong><small>${escapeHtml(formatDate(version.created_at))} · ${escapeHtml(version.config_sha256.slice(0,12))}…</small></div><button class="text-button" type="button" data-version="${escapeHtml(version.version_id)}">Restore copy</button></div>`).join('') : '<p class="history-empty">No configuration versions recorded yet.</p>';
+    $('version-list').querySelectorAll('[data-version]').forEach(button => button.addEventListener('click', async () => {
+      button.disabled = true;
+      try { const version = await api('/api/versions/restore', {version_id:button.dataset.version}); download(`${version.task_profile}-${version.version_id}.j2`, version.template, 'text/plain'); notify('A reviewed copy of the configuration version was downloaded.'); }
+      catch (error) { notify(error.message, true); }
+      finally { button.disabled = false; }
+    }));
     const profileFilter = $('history-profile-filter')?.value || ''; const strategyFilter = $('history-strategy-filter')?.value || '';
     const visibleRuns = runs.filter(run => (!profileFilter || (run.intent && run.intent.vendor === profileFilter) || run.task_profile === profileFilter || (profileFilter === 'single_route' && !run.task_profile)) && (!strategyFilter || run.strategy === strategyFilter));
     $('history-rows').innerHTML = visibleRuns.length ? visibleRuns.map(run => {

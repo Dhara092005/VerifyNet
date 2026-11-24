@@ -48,7 +48,18 @@ def record(report, kind="generation"):
         HISTORY_DB.parent.mkdir(parents=True, exist_ok=True)
         with sqlite3.connect(HISTORY_DB) as db:
             db.execute("CREATE TABLE IF NOT EXISTS runs (id TEXT PRIMARY KEY, created_at TEXT NOT NULL, kind TEXT NOT NULL, payload TEXT NOT NULL)")
+            db.execute("CREATE TABLE IF NOT EXISTS config_versions (version_id TEXT PRIMARY KEY, run_id TEXT NOT NULL, created_at TEXT NOT NULL, task_profile TEXT NOT NULL, template TEXT NOT NULL, config_sha256 TEXT NOT NULL, metadata TEXT NOT NULL)")
             db.execute("INSERT OR REPLACE INTO runs VALUES (?, ?, ?, ?)", (entry["id"], entry["created_at"], entry["kind"], json.dumps(entry)))
+            template = ""
+            if kind == "router":
+                template = str(report.get("config", ""))
+            elif report.get("attempts"):
+                template = str(report["attempts"][-1].get("template", ""))
+            if template:
+                import hashlib
+                version_id = "version-" + uuid.uuid4().hex[:16]
+                metadata = {"mode": report.get("mode", ""), "strategy": report.get("strategy", ""), "kind": kind}
+                db.execute("INSERT INTO config_versions VALUES (?, ?, ?, ?, ?, ?, ?)", (version_id, entry["id"], entry["created_at"], entry.get("task_profile", "single_route"), template, hashlib.sha256(template.encode()).hexdigest(), json.dumps(metadata)))
             db.commit()
     return entry
 
@@ -66,3 +77,34 @@ def list_runs(limit=100):
         if not isinstance(runs, list):
             raise ValueError("Run history must contain a JSON list.")
         return runs[:limit]
+
+
+def list_versions(limit=100):
+    if type(limit) is not int or not 1 <= limit <= MAX_RUNS:
+        raise ValueError("Version limit must be between 1 and 100.")
+    with _LOCK:
+        if not HISTORY_DB.exists():
+            return []
+        with sqlite3.connect(HISTORY_DB) as db:
+            db.execute("CREATE TABLE IF NOT EXISTS config_versions (version_id TEXT PRIMARY KEY, run_id TEXT NOT NULL, created_at TEXT NOT NULL, task_profile TEXT NOT NULL, template TEXT NOT NULL, config_sha256 TEXT NOT NULL, metadata TEXT NOT NULL)")
+            db.row_factory = sqlite3.Row
+            rows = db.execute("SELECT version_id, run_id, created_at, task_profile, template, config_sha256, metadata FROM config_versions ORDER BY created_at DESC LIMIT ?", (limit,)).fetchall()
+        return [dict(row, metadata=json.loads(row["metadata"])) for row in rows]
+
+
+def restore_version(version_id):
+    if not isinstance(version_id, str) or not version_id.startswith("version-"):
+        raise ValueError("Provide a valid configuration version ID.")
+    with _LOCK:
+        if not HISTORY_DB.exists():
+            raise ValueError("No configuration versions are available.")
+        with sqlite3.connect(HISTORY_DB) as db:
+            db.execute("CREATE TABLE IF NOT EXISTS config_versions (version_id TEXT PRIMARY KEY, run_id TEXT NOT NULL, created_at TEXT NOT NULL, task_profile TEXT NOT NULL, template TEXT NOT NULL, config_sha256 TEXT NOT NULL, metadata TEXT NOT NULL)")
+            db.row_factory = sqlite3.Row
+            row = db.execute("SELECT version_id, run_id, created_at, task_profile, template, config_sha256, metadata FROM config_versions WHERE version_id = ?", (version_id,)).fetchone()
+        if row is None:
+            raise ValueError("Configuration version was not found.")
+        result = dict(row)
+        result["metadata"] = json.loads(result["metadata"])
+        result["restored_at"] = datetime.now(timezone.utc).isoformat()
+        return result
