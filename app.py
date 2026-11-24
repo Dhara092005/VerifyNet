@@ -7,6 +7,7 @@ from pathlib import Path
 import socket
 import threading
 import tempfile
+import hmac
 from urllib.parse import urlparse
 import webbrowser
 
@@ -16,7 +17,8 @@ from verifynet.pipeline import run_pipeline
 from verifynet.providers import ProviderError, live_available
 from verifynet.retrieval import DATA, retrieve, retrieve_with_snapshot
 from verifynet.documents import import_document, library, set_enabled
-from verifynet.settings import connect, connection_status, disconnect
+from verifynet.settings import connect, connection_status, disconnect, set_request_session
+from verifynet.audit import event, recent
 from verifynet.router_lab import readiness, run_lab
 from verifynet.history import list_runs, list_versions, record, restore_version
 from verifynet.feedback import add_feedback, feedback_summary
@@ -66,10 +68,34 @@ class Handler(BaseHTTPRequestHandler):
             return False
         return True
 
+    def session_id(self):
+        value = self.headers.get("X-VerifyNet-Session", "")
+        return value if len(value) <= 128 and value.replace("-", "").isalnum() else ""
+
+    def authenticated(self):
+        expected = os.environ.get("VERIFYNET_ACCESS_TOKEN", "")
+        if not expected:
+            return True
+        supplied = self.headers.get("X-VerifyNet-Access", "")
+        authorization = self.headers.get("Authorization", "")
+        if authorization.startswith("Bearer "):
+            supplied = authorization[7:].strip()
+        if not supplied or not hmac.compare_digest(supplied, expected):
+            self.send(401, {"error": "This deployment requires an access token. Enter it in AI setup."})
+            event("auth", urlparse(self.path).path, self.session_id(), "denied", "missing or invalid access token")
+            return False
+        return True
+
     def do_GET(self):
         if not self.local_request():
             return
         path = urlparse(self.path).path
+        set_request_session(self.session_id())
+        if path.startswith("/api/") and not self.authenticated():
+            return
+        if path == "/api/audit":
+            self.send(200, {"events": recent()})
+            return
         if path == "/api/status":
             self.send(200, {"live_available": live_available(), "intent": Intent().data(),
                             "connection": connection_status(), "version": "0.3",
@@ -112,6 +138,8 @@ class Handler(BaseHTTPRequestHandler):
         # Consume bounded bodies before rejection so Windows can deliver the HTTP
         # error instead of resetting a connection with unread incoming bytes.
         path = urlparse(self.path).path
+        set_request_session(self.session_id())
+        event("request", path, self.session_id())
         try:
             length = int(self.headers.get("Content-Length", "0"))
             maximum = 1_000_000 if path == "/api/documents/import" else 20000
@@ -123,6 +151,8 @@ class Handler(BaseHTTPRequestHandler):
             self.send(400, {"error": str(exc)})
             return
         if not self.local_request():
+            return
+        if not self.authenticated():
             return
         if self.headers.get("X-VerifyNet") != "1" or self.headers.get("Content-Type", "").split(";")[0] != "application/json":
             self.send(415, {"error": "Use the local workbench to submit JSON requests."})

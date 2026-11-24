@@ -4,6 +4,8 @@ const names = ['interface', 'interface_cidr', 'destination_cidr', 'next_hop'];
 const stageNames = ['Template syntax', 'Parameter rendering', 'Command structure', 'Intent agreement', 'Local route model'];
 let statusData, report, selectedAttempt = 0, codeTab = 'template', benchmarkReport, noticeTimer;
 let liveBenchmarkReport;
+const sessionId = sessionStorage.getItem('verifynet_session') || (crypto.randomUUID ? crypto.randomUUID() : 'session-' + Date.now());
+sessionStorage.setItem('verifynet_session', sessionId);
 const escapeHtml = value => String(value).replace(/[&<>"']/g, c => ({'&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;'}[c]));
 
 function notify(message, error = false) {
@@ -14,13 +16,17 @@ function notify(message, error = false) {
   if (!error) noticeTimer = setTimeout(() => $('notice').hidden = true, 7000);
 }
 async function api(path, payload) {
-  const response = await fetch(path, payload === undefined ? {} : {
-    method:'POST', headers:{'Content-Type':'application/json', 'X-VerifyNet':'1'}, body:JSON.stringify(payload)
+  const headers = {'Content-Type':'application/json', 'X-VerifyNet':'1', 'X-VerifyNet-Session':sessionId};
+  const accessToken = sessionStorage.getItem('verifynet_access_token');
+  if (accessToken) headers['X-VerifyNet-Access'] = accessToken;
+  const response = await fetch(path, payload === undefined ? {headers} : {
+    method:'POST', headers, body:JSON.stringify(payload)
   });
   const result = await response.json();
   if (!response.ok) throw new Error(result.error || 'The request could not be completed.');
   return result;
 }
+const apiGet = path => fetch(path, {headers:{'X-VerifyNet-Session':sessionId, ...(sessionStorage.getItem('verifynet_access_token') ? {'X-VerifyNet-Access':sessionStorage.getItem('verifynet_access_token')} : {})}}).then(response => response.json());
 function intent() {
   if (['cisco_ios','juniper_junos'].includes($('task-profile').value)) return {vendor:$('task-profile').value, interface:$('vendor-interface').value.trim(), interface_cidr:$('interface_cidr').value.trim(), destination_cidr:$('destination_cidr').value.trim(), next_hop:$('next_hop').value.trim()};
   if ($('task-profile').value === 'ospf') return {router_id:$('router-id').value.trim(), area:$('ospf-area').value.trim(), network_cidr:$('ospf-network').value.trim()};
@@ -145,7 +151,7 @@ $('topology-refresh').addEventListener('click', async () => {
   button.disabled = true;
   button.textContent = 'Checking…';
   try {
-    const [status, router] = await Promise.all([api('/api/status'), fetch('/api/router/status').then(response => response.json())]);
+    const [status, router] = await Promise.all([api('/api/status'), apiGet('/api/router/status')]);
     const healthy = Boolean(status && status.connection);
     $('topology-health-score').textContent = healthy ? '87%' : '0%';
     checked.textContent = `Last checked ${new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})} · ${healthy ? 'workspace connected' : 'workspace unavailable'}`;
@@ -262,8 +268,8 @@ async function executeRouterTest(fromResult = false) {
 }
 async function refreshRouterStatus() {
   try {
-    const response = await fetch('/api/router/status');
-    const data = await response.json();
+    const response = await apiGet('/api/router/status');
+    const data = response;
     $('router-status-badge').textContent = data.ready ? 'READY' : 'UNAVAILABLE';
     $('router-status-badge').className = 'pill' + (data.ready ? '' : ' neutral');
     $('router-status-text').textContent = data.message || 'Docker readiness is unavailable.';
@@ -280,7 +286,7 @@ $('run-result-router').addEventListener('click', async () => {
 $('export-router').addEventListener('click', () => { if (routerReport) download('verifynet-router-evidence.json', routerReport); });
 function formatDate(value) { try { return new Intl.DateTimeFormat(undefined, {dateStyle:'medium', timeStyle:'short'}).format(new Date(value)); } catch { return 'Unknown date'; } }
 function refreshHistory() {
-  return Promise.all([fetch('/api/history').then(response => response.json()), fetch('/api/feedback').then(response => response.json()), fetch('/api/versions').then(response => response.json())]).then(([{runs}, feedback, {versions}]) => {
+  return Promise.all([apiGet('/api/history'), apiGet('/api/feedback'), apiGet('/api/versions')]).then(([{runs}, feedback, {versions}]) => {
     const generation = runs.filter(r => r.kind === 'generation');
     const passed = generation.filter(r => r.final_pass).length;
     const repairs = generation.reduce((sum, r) => sum + (r.repairs || 0), 0);
@@ -333,6 +339,8 @@ $('open-ai-setup').addEventListener('click', () => navigate('setup'));
 $('setup-to-lab').addEventListener('click', () => navigate('lab'));
 $('connection-form').addEventListener('submit', async event => {
   event.preventDefault();
+  const accessToken = $('access-token').value.trim();
+  if (accessToken) sessionStorage.setItem('verifynet_access_token', accessToken);
   const credentials = {api_key:$('api-key').value, model:$('model-id').value};
   $('api-key').value = '';
   $('connect-button').disabled = true;
@@ -341,6 +349,7 @@ $('connection-form').addEventListener('submit', async event => {
   catch(error) { $('connection-message').textContent = error.message; }
   finally { credentials.api_key = ''; $('connect-button').disabled = false; }
 });
+$('access-token').value = sessionStorage.getItem('verifynet_access_token') || '';
 $('disconnect-button').addEventListener('click', async () => {
   $('disconnect-button').disabled = true;
   try { updateConnection(await api('/api/disconnect', {})); $('api-key').value = ''; notify('Live AI disconnected for this server session.'); }

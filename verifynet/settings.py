@@ -4,12 +4,31 @@ import json
 import os
 import re
 import threading
+import contextvars
 import urllib.error
 import urllib.parse
 import urllib.request
 
 LOCK = threading.RLock()
 _session = None
+_sessions = {}
+_request_session = contextvars.ContextVar("verifynet_session", default=None)
+
+
+def set_request_session(session_id):
+    """Bind the current request to an isolated in-memory credential session."""
+    return _request_session.set(session_id or None)
+
+
+def reset_request_session(token):
+    _request_session.reset(token)
+
+
+def _current_session():
+    session_id = _request_session.get()
+    if session_id:
+        return _sessions.get(session_id)
+    return _session
 
 
 @dataclass(frozen=True, repr=False)
@@ -21,8 +40,9 @@ class Credentials:
 
 def credentials():
     with LOCK:
-        if _session is not None:
-            return _session
+        current = _current_session()
+        if current is not None:
+            return current
         return Credentials(os.environ.get("OPENAI_API_KEY", ""), os.environ.get("VERIFYNET_MODEL", ""))
 
 
@@ -56,13 +76,22 @@ def connect(payload):
     if not isinstance(data, dict) or data.get("id") != model:
         raise ValueError("The provider did not confirm that model. Your previous connection was kept.")
     with LOCK:
-        _session = Credentials(key, model, verified=True)
+        session = Credentials(key, model, verified=True)
+        session_id = _request_session.get()
+        if session_id:
+            _sessions[session_id] = session
+        else:
+            _session = session
     return connection_status()
 
 
 def disconnect():
     global _session
     with LOCK:
-        # Explicitly disable environment fallback for this running server as well.
-        _session = Credentials("", "")
+        session_id = _request_session.get()
+        if session_id:
+            _sessions.pop(session_id, None)
+        else:
+            # Explicitly disable environment fallback for this running server as well.
+            _session = Credentials("", "")
     return connection_status()

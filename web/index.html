@@ -100,6 +100,7 @@
     <div class="benchmark-grid">
       <section class="card"><div class="card-heading"><h2>AI connection</h2><span class="pill neutral" id="connection-badge">NOT CONFIGURED</span></div><form id="connection-form" autocomplete="off">
         <label for="api-key">OpenAI API key</label><input id="api-key" type="password" minlength="16" maxlength="512" autocomplete="off" spellcheck="false" placeholder="Enter your key privately here" required>
+        <label for="access-token" class="spaced-label">Deployment access token <span class="tiny">optional</span></label><input id="access-token" type="password" maxlength="512" autocomplete="off" spellcheck="false" placeholder="Only required on protected deployments">
         <label for="model-id" class="spaced-label">Model ID</label><input id="model-id" maxlength="200" placeholder="A model available to your API account" required><p class="field-help">Choose a model supporting the Responses API and structured JSON outputs.</p>
         <p class="field-help">Your key is sent to OpenAI to verify model access and kept only in this local server's memory. It is not saved by the app to disk or browser storage. Stopping the server clears this session connection.</p>
         <button type="submit" class="primary-button" id="connect-button">Verify access & connect <span>↗</span></button><p class="button-footnote">Checks model access only · does not generate content</p>
