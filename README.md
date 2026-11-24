@@ -153,6 +153,10 @@ render.yaml               Render deployment configuration
 
 Imported references are treated as untrusted text. They are not executed as commands or trusted as system instructions. Local history stores summaries rather than templates or credentials. Do not expose a Render deployment publicly without adding appropriate authentication.
 
+Remote live-AI connections are disabled by default. Set `VERIFYNET_ALLOW_REMOTE_AI=true` only after adding authentication and per-user credential isolation to a protected deployment. Local scripted validation and the Router Lab remain available without an AI key.
+
+The independent checker reports bounded topology-safety findings, including overlapping interface subnets, duplicate route destinations, and obvious next-hop loops. These checks complement, but do not replace, a full network simulator such as Batfish or Containerlab.
+
 VerifyNet is a bounded research prototype. It does not configure physical routers, understand unrestricted natural-language network requests, or guarantee production safety.
 
 ## License and references

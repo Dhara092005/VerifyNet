@@ -168,6 +168,8 @@ class Handler(BaseHTTPRequestHandler):
                     raise ValueError("Enter a search query of 1–2,000 characters.")
                 result = retrieve_with_snapshot(query, limit=5)
             elif path == "/api/connection":
+                if os.environ.get("VERIFYNET_ALLOW_REMOTE", "false").lower() == "true" and os.environ.get("VERIFYNET_ALLOW_REMOTE_AI", "false").lower() != "true":
+                    raise ValueError("Live AI connection is disabled for public deployments. Configure authentication and set VERIFYNET_ALLOW_REMOTE_AI=true only on a protected service.")
                 result = connect(payload)
             elif path == "/api/router/run":
                 result = run_lab(payload)

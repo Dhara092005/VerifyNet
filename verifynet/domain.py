@@ -408,6 +408,31 @@ def intent_errors(state, intent):
     return errors
 
 
+def network_safety_errors(state):
+    """Return bounded topology-safety findings for the parsed local model.
+
+    These checks deliberately stay deterministic and conservative: they detect
+    overlapping local networks, duplicate route destinations, and obvious
+    next-hop loops without pretending to replace a full network simulator.
+    """
+    errors = []
+    interfaces = [(name, ipaddress.ip_interface(address)) for name, address in state.get("interfaces", {}).items()]
+    networks = [network for _, interface in interfaces for network in [interface.network]]
+    for index, first in enumerate(networks):
+        for second in networks[index + 1:]:
+            if first.overlaps(second):
+                errors.append(f"Overlapping interface subnets detected: {first} and {second}.")
+    destinations = [ipaddress.ip_network(destination) for destination, _ in state.get("routes", [])]
+    if len(destinations) != len(set(destinations)):
+        errors.append("Duplicate route destinations detected.")
+    for destination, hop in state.get("routes", []):
+        destination_net = ipaddress.ip_network(destination)
+        hop_ip = ipaddress.ip_address(hop)
+        if hop_ip in destination_net:
+            errors.append(f"Possible routing loop: next hop {hop_ip} is inside destination {destination_net}.")
+    return errors
+
+
 def check_template(source, intent):
     intent.validate()
     stages, rendered, states, cases = [], [], [], parameter_cases(intent)
@@ -445,6 +470,7 @@ def check_template(source, intent):
         return finish(stages, rendered, states, cases)
     errors = []
     for i, state in enumerate(states):
+        errors.extend(f"Case {i + 1}: {error}" for error in network_safety_errors(state))
         for _, hop in state["routes"]:
             hop_ip = ipaddress.IPv4Address(hop)
             if not any(hop_ip in ipaddress.IPv4Interface(address).network and hop_ip != ipaddress.IPv4Interface(address).ip
@@ -585,6 +611,7 @@ def check_multi_template(source, intent):
         return finish(stages, rendered, states, cases)
     errors = []
     for index, state in enumerate(states):
+        errors.extend(f"Case {index + 1}: {error}" for error in network_safety_errors(state))
         for _, hop in state["routes"]:
             hop_ip = ipaddress.IPv4Address(hop)
             if not any(hop_ip in ipaddress.IPv4Interface(address).network for address in state["interfaces"].values()):
