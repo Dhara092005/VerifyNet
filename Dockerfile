@@ -6,7 +6,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PORT=8765
 
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends docker.io curl \
+    && apt-get install -y --no-install-recommends docker-cli curl \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
@@ -17,6 +17,6 @@ COPY . .
 RUN mkdir -p /app/data /app/reports
 EXPOSE 8765
 HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
-  CMD curl --fail -H "X-VerifyNet-Access: $${VERIFYNET_ACCESS_TOKEN}" http://127.0.0.1:8765/api/status || exit 1
+  CMD curl -fsS -o /dev/null -H "X-VerifyNet-Access: ${VERIFYNET_ACCESS_TOKEN}" http://127.0.0.1:8765/api/status
 
 CMD ["python", "app.py", "--host", "0.0.0.0", "--port", "8765"]

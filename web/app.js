@@ -173,14 +173,25 @@ $('strategy').addEventListener('change', () => $('max_repairs').disabled = $('st
 document.querySelectorAll('[data-code]').forEach(b => b.addEventListener('click', () => {codeTab = b.dataset.code; showCode();}));
 $('load-broken').addEventListener('click', () => {$('custom-template').value = $('task-profile').value === 'multi_route' ? statusData.multi_template : $('task-profile').value === 'ipv6_static' ? statusData.ipv6_broken_template : $('task-profile').value === 'vlan_static' ? statusData.vlan_broken_template : $('task-profile').value === 'ospf' ? statusData.ospf_broken_template : statusData.broken_template;});
 $('task-profile').addEventListener('change', taskProfileChanged);
+const walkthroughStatus = document.createElement('p');
+walkthroughStatus.className = 'inline-status';
+walkthroughStatus.setAttribute('role', 'status');
+$('run-button').after(walkthroughStatus);
 $('run-form').addEventListener('submit', async event => {
   event.preventDefault();
   const payload = {task_profile:$('task-profile').value, intent:intent(), requirement:$('requirement').value, mode:$('mode').value, strategy:$('strategy').value, max_repairs:Number($('max_repairs').value)};
   if ($('paste-details').open && $('custom-template').value.trim()) payload.template = $('custom-template').value;
   busy(true); $('notice').hidden = true;
+  walkthroughStatus.textContent = 'Running walkthrough…';
   if (payload.mode === 'live') notify('Waiting for the AI provider. Each attempt can take up to a minute.');
-  try { showReport(await api('/api/run', payload)); }
-  catch (error) { notify(error.message, true); }
+  try {
+    showReport(await api('/api/run', payload));
+    walkthroughStatus.textContent = 'Walkthrough complete. See Inspect the evidence.';
+    $('result-badge').scrollIntoView({block: 'nearest'});
+  } catch (error) {
+    walkthroughStatus.textContent = error.message;
+    notify(error.message, true);
+  }
   finally { busy(false); }
 });
 $('validate-only').addEventListener('click', async () => {
@@ -350,6 +361,29 @@ $('connection-form').addEventListener('submit', async event => {
   finally { credentials.api_key = ''; $('connect-button').disabled = false; }
 });
 $('access-token').value = sessionStorage.getItem('verifynet_access_token') || '';
+const unlockButton = document.createElement('button');
+unlockButton.type = 'button';
+unlockButton.className = 'secondary-button';
+unlockButton.textContent = 'Unlock workspace';
+$('access-token').after(unlockButton);
+unlockButton.addEventListener('click', async () => {
+  const token = $('access-token').value.trim();
+  if (!token) {
+    $('connection-message').textContent = 'Enter your deployment access token.';
+    return;
+  }
+  unlockButton.disabled = true;
+  try {
+    const response = await fetch('/api/status', {headers: {'X-VerifyNet-Access': token}});
+    if (!response.ok) throw new Error(response.status === 401 ? 'Incorrect deployment access token.' : 'Could not unlock the workspace.');
+    sessionStorage.setItem('verifynet_access_token', token);
+    location.reload();
+  } catch (error) {
+    $('connection-message').textContent = error.message;
+  } finally {
+    unlockButton.disabled = false;
+  }
+});
 $('disconnect-button').addEventListener('click', async () => {
   $('disconnect-button').disabled = true;
   try { updateConnection(await api('/api/disconnect', {})); $('api-key').value = ''; notify('Live AI disconnected for this server session.'); }
